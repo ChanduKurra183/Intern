@@ -16,6 +16,7 @@ router.get("/getProducts", async (req, res) => {
     let shop = req.query.shop;
   
     let url = "https://" + shop +"/admin/api/2021-01/products.json";
+    console.log('url', url);
     console.log(await Store.findOne({storeName:shop}).AccessToken);
     const header = {
       "X-Shopify-Access-Token": (await Store.findOne({storeName:shop})).AccessToken,
@@ -46,26 +47,48 @@ router.get("/getProducts", async (req, res) => {
       res.send(Resp.data);
     }catch (error) {
       console.log(error);
-      res.send("getting products from store failed");
+      res.send("Adding products in to the store failed");
     }
     
   })
 
   router.put("/changeProduct", async (req, res) => {
     let shop = req.query.shop;
-  
-    let url = "https://" + shop +"/admin/api/2021-01/products/{product_id}.json";
+    const details = req.body;
+    const productId = details.product.id;
+    console.log('details', )
+    let url = "https://" + shop +"/admin/api/2021-01/products/"+productId+".json";
     console.log(await Store.findOne({storeName:shop}).AccessToken);
     const header = {
       "X-Shopify-Access-Token": (await Store.findOne({storeName:shop})).AccessToken,
     }
   
     try {
-      const getProductsFromStoreResp = await axios.get(url, {headers: header});
-      res.send(getProductsFromStoreResp.data);
+      const updateProductFromStoreResp = await axios.put(url, details, {headers: header});
+      res.send(updateProductFromStoreResp.data);
     }catch (error) {
       console.log(error);
-      res.send("getting products from store failed");
+      res.send("Updating product in the store failed");
+    }
+    
+  })
+
+  router.delete("/deleteProduct", async (req, res) => {
+    let shop = req.query.shop;
+    const productId = req.body.id;
+    console.log("pid", productId);
+    let url = "https://" + shop +"/admin/api/2021-01/products/"+productId+".json";
+    // console.log(await Store.findOne({storeName:shop}).AccessToken);
+    const header = {
+      "X-Shopify-Access-Token": (await Store.findOne({storeName:shop})).AccessToken,
+    }
+  
+    try {
+      const deleteProductFromStoreResp = await axios.delete(url, {headers: header});
+      res.send(deleteProductFromStoreResp.data);
+    }catch (error) {
+      console.log(error);
+      res.send("Deleting products from store failed");
     }
     
   })
