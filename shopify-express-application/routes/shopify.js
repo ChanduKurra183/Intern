@@ -7,8 +7,24 @@ const mongoose = require('mongoose');
 
 
 
-router.get('/', (req, res) => {
-    res.send('Hello World..!');
+router.get('/Product', (req, res) => {
+  let shop = req.query.shop;
+  const productId = req.body.id;
+  console.log("pid", productId);
+  let url = "https://" + shop +"/admin/api/2021-01/products/"+productId+".json";
+  // console.log(await Store.findOne({storeName:shop}).AccessToken);
+  const header = {
+    "X-Shopify-Access-Token": (await Store.findOne({storeName:shop})).AccessToken,
+  }
+
+  try {
+    const getProductFromStoreResp = await axios.get(url, {headers: header});
+    res.send(getProductFromStoreResp.data);
+  }catch (error) {
+    console.log(error);
+    res.send("getting product from store failed");
+  }
+  
 });
 
 
@@ -47,7 +63,7 @@ router.get("/getProducts", async (req, res) => {
       res.send(Resp.data);
     }catch (error) {
       console.log(error);
-      res.send("Adding products in to the store failed");
+      res.send("Adding product in to the store failed");
     }
     
   })
@@ -88,7 +104,7 @@ router.get("/getProducts", async (req, res) => {
       res.send(deleteProductFromStoreResp.data);
     }catch (error) {
       console.log(error);
-      res.send("Deleting products from store failed");
+      res.send("Deleting product from store failed");
     }
     
   })
