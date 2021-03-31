@@ -27,7 +27,7 @@ router.get('/install', async(req, res, next) => {
   const api_key = process.env.SHOPIFY_API_KEY;
   const app_secret = process.env.SHOPIFY_API_SECRET;
   const scope = process.env.scope;
-  const redirect_uri = "https://ac868e6fbdab.ngrok.io/callback";
+  const redirect_uri = "https://652dc6ff7bd3.ngrok.io/callback";
   const access_mode = "pre-user";
   const state = nonce;
 

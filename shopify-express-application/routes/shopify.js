@@ -1,22 +1,26 @@
 const express = require('express');
 const router = express.Router();
 const axios = require('axios');
-const Store = require('../models/schema')
+const Store = require('../models/schema');
+const Product = require('../models/product');
 const mongoose = require('mongoose');
 
 router.get("/getProducts", async (req, res) => {
     let shop = req.query.shop;
-  
+    console.log('shop..', shop);
     let url = "https://" + shop +"/admin/api/2021-01/products.json";
     console.log('url', url);
-    console.log(await Store.findOne({storeName:shop}).AccessToken);
+    const at = await Store.findOne({storeName:shop});
+    console.log('Accesstoken....................', at);
     const header = {
-      "X-Shopify-Access-Token": (await Store.findOne({storeName:shop})).AccessToken,
+      "X-Shopify-Access-Token": at.AccessToken,
     }
-  
+    
     try {
       const getProductsFromStoreResp = await axios.get(url, {headers: header});
-      res.send(getProductsFromStoreResp.data);
+      const products = await Product.find();
+      // res.send(getProductsFromStoreResp.data);
+      res.send(products);
     }catch (error) {
       console.log(error);
       res.send("getting products from store failed");
@@ -25,18 +29,37 @@ router.get("/getProducts", async (req, res) => {
   })
   
   router.post("/addProduct", async (req, res) => {
+    // console.log("In add method");
     let shop = req.query.shop;
-    let product = req.body
+    let product1 = req.body
   
     let url = "https://" + shop +"/admin/api/2021-01/products.json";
-    const store = await Store.findOne({storeName:shop})
+    const store = await Store.findOne({storeName:shop});
+    // console.log(store);
     const header = {
       "X-Shopify-Access-Token": store.AccessToken,
     }
-  
+    console.log("AT", store.AccessToken);
+    // console.log("prdouct1..", product1.product.variants[0].sku);
     try {
-      const Resp = await axios.post(url,product, {headers: header});
-      res.send(Resp.data);
+      var product2 = new Product(product1);
+      product2 = await product2.save();
+      console.log("prdouct2..", product2);
+      let {sku,product} = product2; 
+
+      console.log(sku,product);
+      let newProduct = {sku}
+      const Resp = await axios.post(url, {product}, {headers: header});
+      console.log('resp.........', Resp);
+      let newresp = Resp.data;
+      console.log('response...', newresp);
+      // console.log(product2.product.variants[0].sku)
+      let pro = await Product.findOne({'sku':sku });
+      console.log('pro.....', pro);
+      pro.product = newresp.product;
+      const product3 = await pro.save();
+      console.log("prdouct3..", product3);
+      res.send(product3);
     }catch (error) {
       console.log(error);
       res.send("Adding product in to the store failed");
@@ -47,17 +70,23 @@ router.get("/getProducts", async (req, res) => {
   router.put("/changeProduct", async (req, res) => {
     let shop = req.query.shop;
     const details = req.body;
-    const productId = details.product.id;
-    console.log('details', )
+    const productId = details.product.sku;
+    console.log('details',productId);
     let url = "https://" + shop +"/admin/api/2021-01/products/"+productId+".json";
-    console.log(await Store.findOne({storeName:shop}).AccessToken);
+    const store = await Store.findOne({storeName:shop});
     const header = {
-      "X-Shopify-Access-Token": (await Store.findOne({storeName:shop})).AccessToken,
+      "X-Shopify-Access-Token": store.AccessToken,
     }
+    console.log("AT", store.AccessToken);
   
     try {
+      const product1 = await Product.findOne({'sku':sku });
       const updateProductFromStoreResp = await axios.put(url, details, {headers: header});
-      res.send(updateProductFromStoreResp.data);
+      let newresp = updateProductFromStoreResp.data;
+      product1.product = newresp.product;
+      const product2 = await product1.save();
+      // res.send(updateProductFromStoreResp.data);
+      res.send(product2);
     }catch (error) {
       console.log(error);
       res.send("Updating product in the store failed");
@@ -77,6 +106,7 @@ router.get("/getProducts", async (req, res) => {
   
     try {
       const deleteProductFromStoreResp = await axios.delete(url, {headers: header});
+      const product = await productId.remove();
       res.send(deleteProductFromStoreResp.data);
     }catch (error) {
       console.log(error);
