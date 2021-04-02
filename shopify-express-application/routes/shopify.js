@@ -19,8 +19,8 @@ router.get("/getProducts", async (req, res) => {
     try {
       const getProductsFromStoreResp = await axios.get(url, {headers: header});
       const products = await Product.find();
-      // res.send(getProductsFromStoreResp.data);
-      res.send(products);
+      res.send(getProductsFromStoreResp.data);
+      // res.send(products);
     }catch (error) {
       console.log(error);
       res.send("getting products from store failed");
@@ -97,16 +97,19 @@ router.get("/getProducts", async (req, res) => {
   router.delete("/deleteProduct", async (req, res) => {
     let shop = req.query.shop;
     const productId = req.body.id;
+    const prod = await Product.findOne({productId:productId})
     console.log("pid", productId);
+    console.log("prod", prod);
     let url = "https://" + shop +"/admin/api/2021-01/products/"+productId+".json";
-    // console.log(await Store.findOne({storeName:shop}).AccessToken);
+    
     const header = {
       "X-Shopify-Access-Token": (await Store.findOne({storeName:shop})).AccessToken,
     }
+    console.log(await Store.findOne({storeName:shop}).AccessToken);
   
     try {
       const deleteProductFromStoreResp = await axios.delete(url, {headers: header});
-      const product = await productId.remove();
+      const product = await prod.remove();
       res.send(deleteProductFromStoreResp.data);
     }catch (error) {
       console.log(error);
