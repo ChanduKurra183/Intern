@@ -19,8 +19,8 @@ router.get("/getProducts", async (req, res) => {
     try {
       const getProductsFromStoreResp = await axios.get(url, {headers: header});
       const products = await Product.find();
-      res.send(getProductsFromStoreResp.data);
-      // res.send(products);
+      // res.send(getProductsFromStoreResp.data);
+      res.send(products);
     }catch (error) {
       console.log(error);
       res.send("getting products from store failed");
@@ -70,7 +70,9 @@ router.get("/getProducts", async (req, res) => {
   router.put("/changeProduct", async (req, res) => {
     let shop = req.query.shop;
     const details = req.body;
-    const productId = details.product.sku;
+    const skuID = details.sku;
+    let productId = details.product.id;
+    // const productId = details.product.sku;
     console.log('details',productId);
     let url = "https://" + shop +"/admin/api/2021-01/products/"+productId+".json";
     const store = await Store.findOne({storeName:shop});
@@ -80,13 +82,19 @@ router.get("/getProducts", async (req, res) => {
     console.log("AT", store.AccessToken);
   
     try {
-      const product1 = await Product.findOne({'sku':sku });
-      const updateProductFromStoreResp = await axios.put(url, details, {headers: header});
+      const product1 = await Product.findOne({'sku':skuID });
+      console.log('product1....', product1);
+      product1.product = details.product;
+      let {sku,product} = details 
+      console.log("p",product);
+      const updateProductFromStoreResp = await axios.put(url, {product:product}, {headers: header});
+      console.log('update.........', updateProductFromStoreResp);
       let newresp = updateProductFromStoreResp.data;
+      console.log('newresp..', newresp);
       product1.product = newresp.product;
       const product2 = await product1.save();
-      // res.send(updateProductFromStoreResp.data);
-      res.send(product2);
+      res.send(updateProductFromStoreResp.data);
+      // res.send(product2);
     }catch (error) {
       console.log(error);
       res.send("Updating product in the store failed");
